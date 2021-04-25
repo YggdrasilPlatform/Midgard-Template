@@ -549,50 +549,6 @@ void HAL_DCMI_MspDeInit(DCMI_HandleTypeDef* hdcmi)
 }
 
 /**
-* @brief DSI MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hdsi: DSI handle pointer
-* @retval None
-*/
-void HAL_DSI_MspInit(DSI_HandleTypeDef* hdsi)
-{
-  if(hdsi->Instance==DSI)
-  {
-  /* USER CODE BEGIN DSI_MspInit 0 */
-
-  /* USER CODE END DSI_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_DSI_CLK_ENABLE();
-  /* USER CODE BEGIN DSI_MspInit 1 */
-
-  /* USER CODE END DSI_MspInit 1 */
-  }
-
-}
-
-/**
-* @brief DSI MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param hdsi: DSI handle pointer
-* @retval None
-*/
-void HAL_DSI_MspDeInit(DSI_HandleTypeDef* hdsi)
-{
-  if(hdsi->Instance==DSI)
-  {
-  /* USER CODE BEGIN DSI_MspDeInit 0 */
-
-  /* USER CODE END DSI_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_DSI_CLK_DISABLE();
-  /* USER CODE BEGIN DSI_MspDeInit 1 */
-
-  /* USER CODE END DSI_MspDeInit 1 */
-  }
-
-}
-
-/**
 * @brief ETH MSP Initialization
 * This function configures the hardware resources used in this example
 * @param heth: ETH handle pointer
@@ -1353,7 +1309,7 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* htim_encoder)
     */
     GPIO_InitStruct.Pin = ENC_CHA_Pin|ENC_CHB_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF3_TIM8;
     HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);

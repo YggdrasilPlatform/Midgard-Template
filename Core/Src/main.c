@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,8 +50,6 @@ CAN_HandleTypeDef hcan2;
 DAC_HandleTypeDef hdac;
 
 DCMI_HandleTypeDef hdcmi;
-
-DSI_HandleTypeDef hdsi;
 
 ETH_HandleTypeDef heth;
 
@@ -94,7 +92,6 @@ static void MX_ADC1_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_DAC_Init(void);
 static void MX_DCMI_Init(void);
-static void MX_DSIHOST_DSI_Init(void);
 static void MX_ETH_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_I2C4_Init(void);
@@ -120,6 +117,11 @@ static void MX_SAI1_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_UART5_Init(void);
 /* USER CODE BEGIN PFP */
+void test(void);
+
+int __io_putchar(int ch){
+	ITM_SendChar(ch);
+}
 
 /* USER CODE END PFP */
 
@@ -160,7 +162,6 @@ int main(void)
   MX_CAN1_Init();
   MX_DAC_Init();
   MX_DCMI_Init();
-  MX_DSIHOST_DSI_Init();
   MX_ETH_Init();
   MX_I2C2_Init();
   MX_I2C4_Init();
@@ -186,13 +187,48 @@ int main(void)
   MX_TIM5_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-
+  test();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  volatile uint8_t info;
+	  uint8_t txbuf[3] = {0x12 | 0x80, 0, 0};
+	  uint8_t data[6];
+
+	  info = HAL_I2C_Master_Transmit(&hi2c2, 0x52, txbuf, 1, 50);
+	  info = HAL_I2C_Master_Receive(&hi2c2, 0x52, data, 1, 50);
+
+
+	  HAL_Delay(100);
+	  HAL_GPIO_TogglePin(LD0_GPIO_Port, LD0_Pin);
+
+
+	  /*
+	  uint8_t data[6];
+	  uint8_t txbuf[3] = {0xFD, 0, 0};
+	  uint8_t dataregister = 0x00;
+	  uint8_t configregister = 0x01;
+	  volatile uint8_t info;
+
+	  info = HAL_I2C_Master_Transmit(&hi2c2, 0x88, txbuf, 1, 50);
+	  HAL_Delay(10);
+	  info = HAL_I2C_Master_Receive(&hi2c2, 0x88, data, 6, 50);
+
+	  float t_degC = -45 + 175 * (float)(data[0] * 256 + data[1])/65535;
+	  float rh_pRH = -6 + 125 * (float)(data[3] * 256 + data[4])/65535;
+	  if (rh_pRH > 100)	  rh_pRH = 100;
+	  if (rh_pRH < 0)	  rh_pRH = 0;
+
+	  printf("T: %f.4°, RH: %f.2%%\n", t_degC, rh_pRH);
+
+	  HAL_Delay(100);
+	  HAL_GPIO_TogglePin(LD0_GPIO_Port, LD0_Pin);
+
+	  */
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -220,8 +256,7 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -581,113 +616,6 @@ static void MX_DCMI_Init(void)
   /* USER CODE BEGIN DCMI_Init 2 */
 
   /* USER CODE END DCMI_Init 2 */
-
-}
-
-/**
-  * @brief DSIHOST Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_DSIHOST_DSI_Init(void)
-{
-
-  /* USER CODE BEGIN DSIHOST_Init 0 */
-
-  /* USER CODE END DSIHOST_Init 0 */
-
-  DSI_PLLInitTypeDef PLLInit = {0};
-  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-  DSI_PHY_TimerTypeDef PhyTimings = {0};
-  DSI_VidCfgTypeDef VidCfg = {0};
-
-  /* USER CODE BEGIN DSIHOST_Init 1 */
-
-  /* USER CODE END DSIHOST_Init 1 */
-  hdsi.Instance = DSI;
-  hdsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  hdsi.Init.TXEscapeCkdiv = 4;
-  hdsi.Init.NumberOfLanes = DSI_ONE_DATA_LANE;
-  PLLInit.PLLNDIV = 20;
-  PLLInit.PLLIDF = DSI_PLL_IN_DIV1;
-  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-  if (HAL_DSI_Init(&hdsi, &PLLInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HostTimeouts.TimeoutCkdiv = 1;
-  HostTimeouts.HighSpeedTransmissionTimeout = 0;
-  HostTimeouts.LowPowerReceptionTimeout = 0;
-  HostTimeouts.HighSpeedReadTimeout = 0;
-  HostTimeouts.LowPowerReadTimeout = 0;
-  HostTimeouts.HighSpeedWriteTimeout = 0;
-  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
-  HostTimeouts.LowPowerWriteTimeout = 0;
-  HostTimeouts.BTATimeout = 0;
-  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PhyTimings.ClockLaneHS2LPTime = 28;
-  PhyTimings.ClockLaneLP2HSTime = 33;
-  PhyTimings.DataLaneHS2LPTime = 15;
-  PhyTimings.DataLaneLP2HSTime = 25;
-  PhyTimings.DataLaneMaxReadTime = 0;
-  PhyTimings.StopWaitTime = 0;
-  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 10000) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_NONE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  VidCfg.VirtualChannelID = 0;
-  VidCfg.ColorCoding = DSI_RGB888;
-  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode = DSI_VID_MODE_NB_PULSES;
-  VidCfg.PacketSize = 1;
-  VidCfg.NumberOfChunks = 640;
-  VidCfg.NullPacketSize = 0;
-  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_LOW;
-  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_LOW;
-  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive = 10;
-  VidCfg.HorizontalBackPorch = 9;
-  VidCfg.HorizontalLine = 861;
-  VidCfg.VerticalSyncActive = 4;
-  VidCfg.VerticalBackPorch = 2;
-  VidCfg.VerticalFrontPorch = 2;
-  VidCfg.VerticalActive = 480;
-  VidCfg.LPCommandEnable = DSI_LP_COMMAND_DISABLE;
-  VidCfg.LPLargestPacketSize = 0;
-  VidCfg.LPVACTLargestPacketSize = 0;
-  VidCfg.LPHorizontalFrontPorchEnable = DSI_LP_HFP_DISABLE;
-  VidCfg.LPHorizontalBackPorchEnable = DSI_LP_HBP_DISABLE;
-  VidCfg.LPVerticalActiveEnable = DSI_LP_VACT_DISABLE;
-  VidCfg.LPVerticalFrontPorchEnable = DSI_LP_VFP_DISABLE;
-  VidCfg.LPVerticalBackPorchEnable = DSI_LP_VBP_DISABLE;
-  VidCfg.LPVerticalSyncActiveEnable = DSI_LP_VSYNC_DISABLE;
-  VidCfg.FrameBTAAcknowledgeEnable = DSI_FBTAA_DISABLE;
-  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DSIHOST_Init 2 */
-
-  /* USER CODE END DSIHOST_Init 2 */
 
 }
 
@@ -1129,9 +1057,9 @@ static void MX_SPI2_Init(void)
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_4BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
@@ -1139,7 +1067,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi2.Init.CRCPolynomial = 7;
   hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi2) != HAL_OK)
   {
     Error_Handler();
@@ -1431,7 +1359,7 @@ static void MX_TIM8_Init(void)
   htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim8.Init.RepetitionCounter = 0;
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -1786,7 +1714,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : BTN_JS0_Pin BTN_JS1_Pin */
   GPIO_InitStruct.Pin = BTN_JS0_Pin|BTN_JS1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ENC_INT_Pin */
