@@ -67,6 +67,7 @@ void SystemClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 void example(void);
+void test(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -143,9 +144,11 @@ int main(void)
   MX_DMA2D_Init();
   MX_DSIHOST_DSI_Init();
   MX_LTDC_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  example();
+  test();
+  //example();
 
 
 
@@ -155,6 +158,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  uint8_t data = 0x45;
+	  HAL_SPI_Transmit(&hspi4, &data, sizeof(data), 50);
+	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

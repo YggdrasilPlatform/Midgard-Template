@@ -47,6 +47,7 @@ std::array testOrder = {  "Display",		// 0
 						  "6-Axis sensor",	// 25
 						  "Acceleration",	// 26
 						  "RTC Time",		// 27
+						  "RGB Matrix",		// 28
 	};
 
 std::array<Result, 35> testResult;
@@ -342,7 +343,7 @@ extern "C" void example() {
 
 		}
 
-		core::delay(1000);
+		core::delay(500);
 
 		{
 			auto randomData = Random::get<u16>();
@@ -353,6 +354,7 @@ extern "C" void example() {
 
 			snprintf(buffer.data(), buffer.size(), "Value: %04X", randomData);
 			Display::drawString(5, 50 + 21 * 2, buffer.c_str(), drv::Color::White, Font20);
+			Display::drawString(5, 50 + 21 * 3, "Press Button A to confirm", drv::Color::White, Font20);
 
 			do{
 				SevenSegment::setHexadecimal(randomData);
@@ -416,6 +418,31 @@ extern "C" void example() {
 			core::delay(250);
 		}
 
+
+		{
+			Display::clear(0);
+			Display::drawString(5, 10, "Hardware test", drv::Color::Lime, Font24);
+			Display::drawString(5, 50 + 21 * 0, "User IO Test", drv::Color::White, Font20);
+			Display::drawString(5, 50 + 21 * 1, "[28] RGB Matrix", drv::Color::White, Font20);
+
+			RGBMatrix::enable();
+			RGBMatrix::clear();
+			RGBMatrix::flush();
+			bsp::ygg::RGBA8 color = {0x08, 0, 0, 0x04};
+			RGBMatrix::dice(5, color);
+			RGBMatrix::flush();
+
+			do{
+				core::delay(100);
+			} while(check(28, ButtonA));
+
+			while(ButtonA);
+
+			RGBMatrix::disable();
+		}
+
+
+
 		Display::clear(0);
 		Display::drawString(5, 10, "Test report", 20, Font24);
 
@@ -430,7 +457,7 @@ extern "C" void example() {
 
 		}
 
-		Display::drawString(250, 50 + 21 * 34, "Press Button A to see the fonts", drv::Color::White, Font20);
+		Display::drawString(5, 50 + 21 * 34, "Press Button A to see the fonts", drv::Color::White, Font20);
 		while(!ButtonA);
 
 
